@@ -1,0 +1,7 @@
+name = CWRC search bar
+description = Displays a site-wide search block form with three inputs: a search bar, a radio button group for repository vs site content, and a submit button.
+core = 7.x
+package = CWRC
+
+dependencies[] = apachesolr (7.x-1.x)
+dependencies[] = islandora_solr_config (7.x-1.x)

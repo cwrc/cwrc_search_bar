@@ -1,0 +1,131 @@
+<?php
+/**
+ * @file
+ * Hooks and helper functions for the cwrc_search_bar module.
+ *
+ * Potential future improvements:
+ * - Let the user select which searches to provide radiobuttons for from the
+ *   list of active search modules (see _search_get_module_names(), the
+ *   search_active_modules variable).
+ * - Let the user select which Apachesolr search page to redirect searches to.
+ * - Automatically select the correct radiobutton when you're in a search page
+ *   path.
+ */
+
+/* Hooks. */
+
+/**
+ * Implements hook_block_info().
+ */
+function cwrc_search_bar_block_info() {
+  $blocks = array();
+
+  // A search block.
+  $blocks['search'] = array(
+    'info' => t('CWRC search bar'),
+    'cache' => DRUPAL_CACHE_GLOBAL,
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function cwrc_search_bar_block_view($delta = '') {
+  $block = array();
+
+  // Display the search block.
+  if ($delta === 'search') {
+    $block['subject'] = t('Search');
+    $block['content'] = drupal_get_form('cwrc_search_bar_search');
+  }
+
+  return $block;
+}
+
+/* Form handlers. */
+
+/**
+ * Form constructor for the CWRC search block form.
+ *
+ * @see cwrc_search_bar_block_view()
+ * @see cwrc_search_bar_search_submit()
+ *
+ * @ingroup forms
+ */
+function cwrc_search_bar_search($form, &$form_state) {
+  // A textfield to enter a search query.
+  $form['query'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Search terms'),
+    '#title_display' => 'invisible',
+    '#default_value' => '',
+    '#attributes' => array('title' => t('Enter the terms you wish to search for.')),
+  );
+
+  // Let the user choose the scope. Default to the first one.
+  $scopes = _cwrc_search_bar_valid_scopes();
+  $scopes_keys = array_keys($scopes);
+  $form['scope'] = array(
+    '#type' => 'radios',
+    '#title' => t('Search scope'),
+    '#title_display' => 'invisible',
+    '#options' => $scopes,
+    '#default_value' => (string) array_shift($scopes_keys),
+  );
+
+  // Add a submit button.
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Search'),
+  );
+
+  return $form;
+}
+
+/**
+ * Form submission handler for the CWRC search block form.
+ *
+ * @see cwrc_search_bar_search()
+ */
+function cwrc_search_bar_search_submit($form, &$form_state) {
+  // Note that drupal_goto() automatically URL-escapes the query, i.e.: it
+  // ensures a search term of "test?destination=node" turns into
+  // "test%3Fdestination%3Dnode", rather than a search term of "test" and
+  // subsequent redirection to /node, so we don't have to worry about doing that
+  // ourselves.
+  if ($form_state['values']['scope'] === 'islandora') {
+    drupal_goto('islandora/search/' . $form_state['values']['query'], array(
+      'query' => array('type' => 'dismax'),
+    ));
+  }
+  // Default to the site content search.
+  else {
+    drupal_goto('search/site/' . $form_state['values']['query']);
+  }
+}
+
+/* Helper functions. */
+
+/**
+ * Return a list of search scopes the current user has access to.
+ *
+ * @return array
+ *   An associative array of search scopes the current user has access to.
+ */
+function _cwrc_search_bar_valid_scopes() {
+  $scopes = array();
+
+  // Add the Islandora search scope if the user has access to it.
+  if (user_access('search islandora solr')) {
+    $scopes['islandora'] = t('Collaboratory');
+  }
+
+  // Add the site content search scope if the user has access to it.
+  if (user_access('search content')) {
+    $scopes['site'] = t('Site content');
+  }
+
+  return $scopes;
+}
