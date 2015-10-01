@@ -12,6 +12,16 @@
  *   path.
  */
 
+/**
+ * The path prefix for Islandora searches.
+ */
+define('CWRC_SEARCH_BAR_ISLANDORA_PATH_PREFIX', 'islandora/search');
+
+/**
+ * The path prefix for site content searches.
+ */
+define('CWRC_SEARCH_BAR_SITE_PATH_PREFIX', 'search/site');
+
 /* Hooks. */
 
 /**
@@ -99,13 +109,13 @@ function cwrc_search_bar_search_submit($form, &$form_state) {
   // subsequent redirection to /node, so we don't have to worry about doing that
   // ourselves.
   if ($form_state['values']['scope'] === 'islandora') {
-    drupal_goto('islandora/search/' . $form_state['values']['query'], array(
+    drupal_goto(CWRC_SEARCH_BAR_ISLANDORA_PATH_PREFIX . '/' . $form_state['values']['query'], array(
       'query' => array('type' => 'dismax'),
     ));
   }
   // Default to the site content search.
   else {
-    drupal_goto('search/site/' . $form_state['values']['query']);
+    drupal_goto(CWRC_SEARCH_BAR_SITE_PATH_PREFIX . '/' . $form_state['values']['query']);
   }
 }
 
