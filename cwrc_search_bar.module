@@ -61,7 +61,10 @@ function cwrc_search_bar_search($form, &$form_state) {
     '#title' => t('Search terms'),
     '#title_display' => 'invisible',
     '#default_value' => '',
-    '#attributes' => array('title' => t('Enter the terms you wish to search for.')),
+    '#attributes' => array(
+      'title' => t('Enter the terms you wish to search for.'),
+      'placeholder' => t('search for...'),
+    ),
   );
 
   // Let the user choose the scope. Default to the first one.
