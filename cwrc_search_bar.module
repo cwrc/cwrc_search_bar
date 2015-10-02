@@ -12,6 +12,16 @@
  *   path.
  */
 
+/**
+ * The path prefix for Islandora searches.
+ */
+define('CWRC_SEARCH_BAR_ISLANDORA_PATH_PREFIX', 'islandora/search');
+
+/**
+ * The path prefix for site content searches.
+ */
+define('CWRC_SEARCH_BAR_SITE_PATH_PREFIX', 'search/site');
+
 /* Hooks. */
 
 /**
@@ -55,24 +65,34 @@ function cwrc_search_bar_block_view($delta = '') {
  * @ingroup forms
  */
 function cwrc_search_bar_search($form, &$form_state) {
+  $current_search_params = _cwrc_search_bar_detect_search_params();
+
   // A textfield to enter a search query.
   $form['query'] = array(
     '#type' => 'textfield',
     '#title' => t('Search terms'),
     '#title_display' => 'invisible',
-    '#default_value' => '',
-    '#attributes' => array('title' => t('Enter the terms you wish to search for.')),
+    '#default_value' => $current_search_params['term'],
+    '#attributes' => array(
+      'title' => t('Enter the terms you wish to search for.'),
+      'placeholder' => t('search for...'),
+    ),
   );
 
-  // Let the user choose the scope. Default to the first one.
+  // Let the user choose the scope. Default to the first one, unless we can
+  // detect one, at which point, use the detected one instead.
   $scopes = _cwrc_search_bar_valid_scopes();
   $scopes_keys = array_keys($scopes);
+  $default_scope = (string) array_shift($scopes_keys);
+  if (in_array($current_search_params['scope'], $scopes_keys)) {
+    $default_scope = $current_search_params['scope'];
+  }
   $form['scope'] = array(
     '#type' => 'radios',
     '#title' => t('Search scope'),
     '#title_display' => 'invisible',
     '#options' => $scopes,
-    '#default_value' => (string) array_shift($scopes_keys),
+    '#default_value' => $default_scope,
   );
 
   // Add a submit button.
@@ -96,13 +116,13 @@ function cwrc_search_bar_search_submit($form, &$form_state) {
   // subsequent redirection to /node, so we don't have to worry about doing that
   // ourselves.
   if ($form_state['values']['scope'] === 'islandora') {
-    drupal_goto('islandora/search/' . $form_state['values']['query'], array(
+    drupal_goto(CWRC_SEARCH_BAR_ISLANDORA_PATH_PREFIX . '/' . $form_state['values']['query'], array(
       'query' => array('type' => 'dismax'),
     ));
   }
   // Default to the site content search.
   else {
-    drupal_goto('search/site/' . $form_state['values']['query']);
+    drupal_goto(CWRC_SEARCH_BAR_SITE_PATH_PREFIX . '/' . $form_state['values']['query']);
   }
 }
 
@@ -128,4 +148,69 @@ function _cwrc_search_bar_valid_scopes() {
   }
 
   return $scopes;
+}
+
+/**
+ * Return a search term and scope by looking at the URL.
+ *
+ * @return array
+ *   An associative array containing:
+ *   - scope: A string containing the scope that was searched. If the scope
+ *     cannot be determined, '' (an empty string) will be returned.
+ *   - term: The search term used in the search. If the search term cannot be
+ *     determined, '' (an empty string) will be returned.
+ */
+function _cwrc_search_bar_detect_search_params() {
+  $answer = array(
+    'scope' => '',
+    'term' => '',
+  );
+  $current_url = implode('/', arg());
+
+  // If the current URL starts with the Islandora search path prefix, the user
+  // just searched Islandora.
+  if (_cwrc_search_bar_string_starts_with($current_url, CWRC_SEARCH_BAR_ISLANDORA_PATH_PREFIX)) {
+    $answer['scope'] = 'islandora';
+
+    // For this particular module, the search term happens to be the next part
+    // of the URL after the prefix.
+    $num_prefix_tokens = count(explode('/', CWRC_SEARCH_BAR_ISLANDORA_PATH_PREFIX));
+    $answer['term'] = (string) arg($num_prefix_tokens);
+  }
+  // If the current URL starts with the Site search path prefix, the user just
+  // searched the site.
+  elseif (_cwrc_search_bar_string_starts_with($current_url, CWRC_SEARCH_BAR_SITE_PATH_PREFIX)) {
+    $answer['scope'] = 'site';
+
+    // For this particular module, the search term happens to be the next part
+    // of the URL after the prefix.
+    $num_prefix_tokens = count(explode('/', CWRC_SEARCH_BAR_SITE_PATH_PREFIX));
+    $answer['term'] = (string) arg($num_prefix_tokens);
+  }
+
+  return $answer;
+}
+
+/**
+ * Determine if a given string starts with a given substring.
+ *
+ * @param string $haystack
+ *   A string to search.
+ * @param string|array $needles
+ *   One or more sub-strings to test.
+ *
+ * @return bool
+ *   TRUE if at least one $needle is found at the start of $haystack; FALSE
+ *   otherwise.
+ *
+ * @see https://github.com/laravel/framework/blob/5.1/src/Illuminate/Support/Str.php
+ */
+function _cwrc_search_bar_string_starts_with($haystack, $needles) {
+  foreach ((array) $needles as $needle) {
+    if ($needle != '' && strpos($haystack, $needle) === 0) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
 }
