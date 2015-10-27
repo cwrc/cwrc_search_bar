@@ -95,7 +95,7 @@ function cwrc_search_bar_search($form, &$form_state) {
     $default_scope = $current_search_params['scope'];
   }
   $form['basic_query']['scope'] = array(
-    '#type' => 'radios',
+    '#type' => 'select',
     '#title' => t('Search scope'),
     '#title_display' => 'invisible',
     '#options' => $scopes,
