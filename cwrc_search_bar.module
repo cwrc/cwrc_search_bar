@@ -108,6 +108,16 @@ function cwrc_search_bar_search($form, &$form_state) {
     '#value' => t('Search'),
   );
 
+  // An advanced search link.
+  if (module_exists('cwrc_search') && user_access('search islandora solr')) {
+    $form['advanced_search'] = array(
+      '#type' => 'link',
+      '#title' => t('Advanced search'),
+      '#href' => 'cwrc_search',
+      '#attributes' => array('class' => array('advanced_search_button')),
+    );
+  }
+
   return $form;
 }
 
