@@ -67,8 +67,15 @@ function cwrc_search_bar_block_view($delta = '') {
 function cwrc_search_bar_search($form, &$form_state) {
   $current_search_params = _cwrc_search_bar_detect_search_params();
 
+  // A container for the search query, scope, and default search button, so we
+  // make the scope and search button look like they're inside the textfield.
+  $form['basic_query'] = array(
+    '#type' => 'container',
+    '#attributes' => array('class' => array('basic_query_wrapper')),
+  );
+
   // A textfield to enter a search query.
-  $form['query'] = array(
+  $form['basic_query']['query'] = array(
     '#type' => 'textfield',
     '#title' => t('Search terms'),
     '#title_display' => 'invisible',
@@ -87,7 +94,7 @@ function cwrc_search_bar_search($form, &$form_state) {
   if (in_array($current_search_params['scope'], $scopes_keys)) {
     $default_scope = $current_search_params['scope'];
   }
-  $form['scope'] = array(
+  $form['basic_query']['scope'] = array(
     '#type' => 'radios',
     '#title' => t('Search scope'),
     '#title_display' => 'invisible',
@@ -96,7 +103,7 @@ function cwrc_search_bar_search($form, &$form_state) {
   );
 
   // Add a submit button.
-  $form['submit'] = array(
+  $form['basic_query']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Search'),
   );
