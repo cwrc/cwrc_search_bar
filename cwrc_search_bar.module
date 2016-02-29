@@ -132,7 +132,20 @@ function cwrc_search_bar_search_submit($form, &$form_state) {
   // "test%3Fdestination%3Dnode", rather than a search term of "test" and
   // subsequent redirection to /node, so we don't have to worry about doing that
   // ourselves.
-  if ($form_state['values']['scope'] === 'islandora') {
+  if ($form_state['values']['scope'] === 'project') {
+    $gid = og_context_determine_context('node');
+    $group = entity_load_single('node', $gid);
+    $wrapper = entity_metadata_wrapper('node', $group);
+    drupal_goto(CWRC_SEARCH_BAR_ISLANDORA_PATH_PREFIX . '/' . $form_state['values']['query'], array(
+      'query' => array(
+        'type' => 'dismax',
+        'f' => array(
+          'ancestors_ms:"' . Apache_Solr_Service::escape($wrapper->{CWRC_PROJECTS_COLLECTION_PID_FIELD}->value()->id) . '"',
+        ),
+      ),
+    ));
+  }
+  else if ($form_state['values']['scope'] === 'islandora') {
     drupal_goto(CWRC_SEARCH_BAR_ISLANDORA_PATH_PREFIX . '/' . $form_state['values']['query'], array(
       'query' => array('type' => 'dismax'),
     ));
@@ -153,6 +166,14 @@ function cwrc_search_bar_search_submit($form, &$form_state) {
  */
 function _cwrc_search_bar_valid_scopes() {
   $scopes = array();
+
+  // Add project-specific Islandora search scope if we are in group context.
+  if ($gid = og_context_determine_context('node')) {
+    $group = entity_load_single('node', $gid);
+    if (isset($group->{CWRC_PROJECTS_COLLECTION_PID_FIELD})) {
+      $scopes['project'] = t('This project');
+    }
+  }
 
   // Add the Islandora search scope if the user has access to it.
   if (user_access('search islandora solr')) {
