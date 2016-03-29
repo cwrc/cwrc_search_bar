@@ -22,6 +22,11 @@ define('CWRC_SEARCH_BAR_ISLANDORA_PATH_PREFIX', 'islandora/search');
  */
 define('CWRC_SEARCH_BAR_SITE_PATH_PREFIX', 'search/site');
 
+/**
+ * The field storing search string for projects.
+ */
+define('CWRC_SEARCH_BAR_SEARCH_STRING_FIELD', 'field_search_string');
+
 /* Hooks. */
 
 /**
@@ -136,13 +141,24 @@ function cwrc_search_bar_search_submit($form, &$form_state) {
     $gid = og_context_determine_context('node');
     $group = entity_load_single('node', $gid);
     $wrapper = entity_metadata_wrapper('node', $group);
-    drupal_goto(CWRC_SEARCH_BAR_ISLANDORA_PATH_PREFIX . '/' . $form_state['values']['query'], array(
-      'query' => array(
-        'type' => 'dismax',
-        'f' => array(
-          'ancestors_ms:"' . Apache_Solr_Service::escape($wrapper->{CWRC_PROJECTS_COLLECTION_PID_FIELD}->value()->id) . '"',
-        ),
+    $query = array(
+      'type' => 'dismax',
+      'f' => array(
+        'ancestors_ms:"' . Apache_Solr_Service::escape($wrapper->{CWRC_PROJECTS_COLLECTION_PID_FIELD}->value()->id) . '"',
       ),
+    );
+
+    // Append "search string" field if available and not empty.
+    if ($wrapper->__isset(CWRC_SEARCH_BAR_SEARCH_STRING_FIELD)
+      && $wrapper->{CWRC_SEARCH_BAR_SEARCH_STRING_FIELD}->value()) {
+
+      // Parse out the key => value pairs here and merge with query.
+      parse_str($wrapper->{CWRC_SEARCH_BAR_SEARCH_STRING_FIELD}->value(), $extra);
+      $query = array_merge_recursive($query, $extra);
+    }
+
+    drupal_goto(CWRC_SEARCH_BAR_ISLANDORA_PATH_PREFIX . '/' . $form_state['values']['query'], array(
+      'query' => $query
     ));
   }
   else if ($form_state['values']['scope'] === 'islandora') {
