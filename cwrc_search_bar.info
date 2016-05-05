@@ -4,6 +4,6 @@ core = 7.x
 package = CWRC
 version = 7.x-1.0-dev
 
-dependencies[] = apachesolr (7.x-1.x)
-dependencies[] = islandora_solr_config (7.x-1.x)
+dependencies[] = apachesolr
+dependencies[] = islandora_solr_config
 dependencies[] = cwrc_projects
