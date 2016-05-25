@@ -1,4 +1,4 @@
-name = CWRC: search bar
+name = CWRC: Search Bar
 description = Displays a site-wide search block form with three inputs: a search bar, a radio button group for repository vs site content, and a submit button.
 core = 7.x
 package = CWRC
