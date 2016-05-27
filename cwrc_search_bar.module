@@ -38,7 +38,7 @@ function cwrc_search_bar_block_info() {
   // A search block.
   $blocks['search'] = array(
     'info' => t('CWRC search bar'),
-    'cache' => DRUPAL_CACHE_GLOBAL,
+    'cache' => DRUPAL_NO_CACHE,
   );
 
   return $blocks;
