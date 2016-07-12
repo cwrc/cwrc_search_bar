@@ -198,7 +198,7 @@ function _cwrc_search_bar_valid_scopes() {
 
   // Add the site content search scope if the user has access to it.
   if (user_access('search content')) {
-    $scopes['site'] = t('Site content');
+    $scopes['site'] = t('Website content');
   }
 
   return $scopes;
